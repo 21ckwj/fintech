@@ -1,9 +1,3 @@
-ident,site,dated
-619,DR-1,1927-02-08
-622,DR-1,1927-02-10
-734,DR-3,1939-01-07
-735,DR-3,1930-01-12
-751,DR-3,1930-02-26
-752,DR-3,
-837,MSK-4,1932-01-14
-844,DR-1,1932-03-22
+version https://git-lfs.github.com/spec/v1
+oid sha256:ebb06713eec1413df024112aea0b866883bf1fd08dfe6943d76cffcd7cd14f55
+size 168

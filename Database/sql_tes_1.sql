@@ -44,18 +44,23 @@ create table buytbl(
     price int not null,
     amount smallint not null,
     constraint fk_userid foreign key(userid) references usertbl(userid));
+    # buytbl userid  칼럼은  usertbl의 useried칼럼을 참조 => 데이터의 일치성 유지
+    # buytbl의 userid의 값들은 usertbl에 존재하고 있어야
+    
+    
+select * from information_schema.table_constraints where table_name = 'buytbl';
     
 insert into usertbl values('LSG', '이승기', 1987, '서울', '011', '11111111', 182, '2008-07-07');
 insert into usertbl values('KBS', '김범수', 1979, '경남', '011', '11111111', 173, '2008-07-07');
 insert into usertbl values('KKH', '김경호', 1971, '전남', '011', '11111111', 177, '2008-07-07');
 
-show tables;
-desc usertbl;
+-- show tables;
+-- desc usertbl;
 select * from usertbl;
 
 insert into buytbl values(2, 'KBS', '노트북', '전자', 1000, 1);
 insert into buytbl values(3, 'KBS', '운동화', '스포츠', 30,2);
-insert into buytbl values(1, 'JYP', '모니터', '전자', 200, 1);
+insert into buytbl values(1, 'JYP', '모니터', '전자', 200, 1); -- error
 
 desc buytbl;
 select * from buytbl;
@@ -77,6 +82,8 @@ create table usertbl(
     height smallint,
     mdate date,
     constraint primary key pk_userid (userid));
+
+
 
 
 

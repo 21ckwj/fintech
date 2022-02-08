@@ -227,8 +227,288 @@ show tables;
 
 drop table usertbl1;
 
+-- group by => 데이터를 그룹으로 묶어서 그룹 단위로 데이터를 연산 
+-- 1. 그룹화 > 2. 그룹별 연산(집계함수)
+
+use sqldb;
+
+select * from usertbl;
+select * from buytbl;
+
+-- 총구매액 
+select userid from buytbl group by userid;
+select userid, sum(amount) from buytbl group by userid;
+select userid, sum(amount) as total_amount from buytbl group by userid order by total_amount;
+
+-- 평균 구매액 
+select userid, avg(amount) as '평균구매금액' from buytbl group by userid order by avg(amount);
+
+-- 구매횟수
+select userid, count(amount) as '구매횟수' from buytbl group by userid
+
+-- 사용자별 총구매액이 1000이상인 고객데이터 출력
+-- group by 에서 조건을 지정하는 경우: having (o), where(x)
+-- select userid, sum(price*amount) as '총구매액' from buytbl group by userid where sum(price*amount)>= 1000; -- error
+select userid, sum(price*amount) as '총구매액' from buytbl group by userid having sum(price*amount) >= 1000;
+
+-- 구매횟수가 2회 이상인 고객정보를 출력..
+select * from buytbl group by userid having count(amount) >= 2;
+
+-- usertbl에서 가장 키가 큰 사람과 작은 사람을 출력하시오
+select userid,max(height) from usertbl; -- 186
+select userid,min(height) from usertbl; -- 166
+select userid, height from usertbl where height in ((select max(height)), (select min(height)));
+
+use employees;
+select * from employees;
+
+create table testtbl1(id int, fname varchar(50), lname varchar(50));
+use sqldb;
+ -- 데이터 밖에서 테이블에 접근
+insert into testtbl1 select emp_no, first_name, last_name from employees.employees;
+select * from testtbl1;
+
+-- 데이터 수정 : update ~set ~;
+select * from testtbl1 where fname= 'Aamer';
+update testtbl1 set lname = '없음' where fname = 'Aamer';
+
+-- buytbl 가격을 1.5배 올린 값으로 수정
+update buytbl set price = price*1.5;
+select * from buytbl;
+
+-- buytbl에서 모니터 가격을 50% 할인하도록 가격을 수정 
+update buytbl set price= price * 0.5 where prodName = '모니터';
+select * from buytbl;
+
+-- 데이터 삭제 : delete(where)
+-- fname이 'Aamer' 인 데이터를 삭제 
+select * from testtbl1 where fname = 'Aamer';
+delete from testtbl1 wherer fname = 'Aamer';
+
+## join
+select * from usertbl;
+select * from buytbl;
+
+-- inner join
+
+select * from buytbl inner join usertbl
+	on buytbl.userid = usertbl.userid;
+    
+select * from buytbl b inner join usertbl u
+	on b.userid = u.userID;
+    
+select * from buytbl, usertbl
+	where  buytbl.userID = usertbl.userID;
+    
+select * from buytbl b, usertbl u 
+	where b.userid = u.userID;
+    
+-- 조용필이 구매한 제품의 이름과 조용필의 주소를 출력하시오
+select prodName, addr from buytbl inner join usertbl
+	on buytbl.userID = usertbl.userID
+    where name = '조용필';
+    
+-- 모니터를 구매한 사람들의 이름을 출력 
+select name from buytbl inner join usertbl
+	on buytbl.userID = usertbl.userID
+    where prodName = '모니터';
+    
+-- 전화번호가 없는 고객의 이름, 주소, 구매제품을 출력
+select name, addr, prodname from buytbl inner join usertbl
+	on buytbl.userID = usertbl.userID
+    where mobile1 is null;
+    
+-- 총구매금액이 가장 큰 고객정보를 출력 
+select name, amount, price, sum(amount*price) 
+	from buytbl inner join usertbl
+	on buytbl.userid = usertbl.userid
+    group by buytbl.userid
+    order by sum(price*amount) desc
+    limit 1;
+
+-- left join
+select * from buytbl b left join usertbl u 
+	on b.userid = u.userid;
+
+-- right join
+select * from buytbl b right join usertbl u 
+	on b.userid = u.userid;
+    
+-- table 3개 join
+create table stdtbl (
+	stdname varchar(10) not null primary key,
+    addr char(4) not null);
+    
+insert into stdtbl values ('김범수', '경남'), ('성시경','서울'), ('조용필','경기'), ('은지원','경북'),('바비킴','서울') ;
+select * from stdtbl;
+
+create table clubtbl (
+	clubname varchar(10) not null primary key,
+    roomno char(4) not null);
+insert into clubtbl values ('수영','101호'), ('바둑','102호'), ('축구', '103호'),('봉사', '104호') ;
+select * from clubtbl;
+
+create table stdclubtbl(
+	num int auto_increment not null primary key,
+    stdname varchar(10) not null,
+    clubname varchar(10) not null);
+insert into stdclubtbl values(null, '김범수', '바둑'), (null, '김범수','축구'),(null,'조용필','축구'),
+	(null, '은지원', '축구'), (null,'바비킴','봉사');
+select * from stdclubtbl;
+
+select * from stdtbl inner join stdclubtbl on stdtbl.stdname = stdclubtbl.stdname
+					inner join clubtbl on clubtbl.clubname = stdclubtbl.clubname;
+
+select * from stdtbl s inner join stdclubtbl sc on s.stdname = sc.stdname
+					inner join clubtbl c on c.clubname = sc.clubname;
+                    
+select * from stdtbl, stdclubtbl, clubtbl
+	where stdtbl.stdname = stdclubtbl.stdname
+    and clubtbl.clubname = stdclub.clubname;
+    
+
+select * from stdtbl s, stdclubtbl sc, clubtbl c
+	where s.stdname = sc.stdname
+    and c.clubname = sc.clubname;
+
+-- 축구부에 가입한 학생의 주소를 출력 
+
+select addr from stdtbl s, stdclubtbl sc, clubtbl c
+		where s.stdname = sc.stdname
+        and c.clubname = sc.clubname
+        and c.clubname = '축구';
+        
+### if구문 / case when 구문 
+### procedure() : 함수
+
+drop procecdure if exists ifproc3;
+delimiter $$ 
+
+create procedure ifproc3()
+begin
+	declare point int;     #변수 선언 
+    declare credit char(1);
+    set point = 77;
+    
+    if point >= 90 then
+		set credit = 'A';
+	elseif point>= 80 then
+		set credit = 'B';
+	elseif point >= 70 then
+		set credit = 'C';
+	else
+		set credit = 'D';
+	end if;
+    
+    select concat('취득학점 :', point), concat('학점 :', credit);
+end $$
+
+delimiter ;
+
+call ifproc2();
+
+drop prodcdure if exists ifproc2;
+delimiter $$ 
+
+create procedure ifproc2()
+begin
+	declare point int;     #변수 선언 
+    declare credit char(1);
+    set point = 77;
+    
+    case
+		when point >= 90 then
+			set credit = 'A';
+		when point>= 80 then
+			set credit = 'B';
+		when point >= 70 then
+			set credit = 'C';
+		else
+			set credit = 'D';
+		end case;
+    
+    select concat('취득학점 :', point), concat('학점 :', credit);
+end $$
+
+delimiter ;
+
+call ifproc2();
+
+select u.userid, u.name, sum(price*amount) as 'total_amount'
+	from buytbl b left join usertbl u 
+    on b.userid = u.userid
+    group by u.userid
+    order by total_amount desc;
+    
+-- 기본함수 
+-- cast: 데이터 타입을 변환
+select cast('2020-10-16 12:25:29:123' as date) as 'date';
+select cast('2020-10-16 12:25:29:123' as time) as 'Time';
+select cast('2020-10-16 12:25:29:123' as datetime) as 'datetime';
+
+-- concat : 이어주는 함수 
+use sqldb;
+show tables;
+select num, concat(cast(price as char(10)),'x',cast(amount as char(10)), '=') as '가격*구매량' ,
+            price*amount as '총구매금액'
+            from buytbl;
+            
+select concat('100','200');
+select concat_ws('/','2020','01','01') as '날짜';
+
+-- ifnull(요소1, 요소2) : 요소1이 null이면 요소2를 리턴, 요소1이 null이 아니면 요소1을 리턴.
+select ifnull(null,100);
+select ifnull(100, 200);
+
+-- insert('문자열1', index, length, '문자열2') : 문자열1의 index 위치에 length 길이 인덱스에 문자열2를 입력 
+select insert('abcdefghijk', 3, 4, '@@@@');
+select insert('abcdefghijk', 3, 2, '@@@@');
+
+-- left ('문자열', num) : 문자열 왼쪽으로부터 num 개수만큼 요소출력
+-- right ('문자열', num) : 문자열 오른쪽으로부터 num 개수만큼 요소출력alter
+select left('abcdefghi',3);
+select right('abcdefghi',3);
+
+-- repeat('문자열',n) : 문자열을 n회 반복 
+select repeat('abc',10);
+
+select ltrim('   abc   ');
+select rtrim('   abc    ');
+
+-- replace('문자열1','문자열2','문자열3') : 문자열1에서 문자열2를 찾아서 문자열3으로 변경 
+select replace('hello mysql', 'mysql', 'python');
+
+-- abs 
+select abs(-3);
+
+-- ceiling(), floor(), round()
+select ceiling(4.7);
+select floor(4.7);
+select round(4.7);
+select round(4.3);
+
+-- mod: 나머지 계산
+select mod(11,2);
+select mod(17,3);
+
+-- sqrt : 제곱근 
+select sqrt(9);
+
+-- pow : 승a
+select pow(2,3);
+
+-- length : byte의
 
 
 
 
+-- lower()
+select lower('abcdEFG');
+select upper('abcdEFG');
 
+-- lpad('문자열1', num, '@') : 문자열 1을 num 크기만큼 자리수를 늘리고 빈다리를 '@'로 채운다
+select lpad('abc',7,'@');
+select rpad('abc', 7,'@');
+
+-- ltrim, rtrim : 좌우 공백제거 
+select ltrim('

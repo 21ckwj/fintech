@@ -1,0 +1,69 @@
+mongod --dbpath C:\data\db
+http://localhost:27017/
+https://robomongo.org/download
+conn
+
+show collections
+db.createCollection('employees', {capped:true, size:10000})
+db.employees.isCapped()
+db.employees.drop()
+db.employees.stats()
+db.employees.renameCollection('emp')
+db.emp.drop()
+
+db.createCollection('employees')
+db.employees.insertOne({
+    name:'sue',
+    age:26,
+    status:'pending'})
+db.employees.find()
+
+db.employees.insertMany(
+[
+ {'user_id':'bcd001', age:45, status:'A'},
+ {'user_id':'bcd002', age:35, status:'B'},
+ {'user_id':'bcd003', age:25, status:'A'},
+ {'user_id':'bcd004', age:15, status:'A'},
+ {'user_id':'bcd005', age:45, status:'B'},
+]
+)
+db.employees.find()
+
+db.employees.find({'user_id':'bcd002'})
+db.employees.find({'user_id':'bcd002'}, {user_id:1, age:1, status:1, _id:0})
+db.employees.find({$or : [{user_id:'bcd002'}, {age:25}]} )
+db.employees.find({$or : [{user_id:'bcd002'}, {age:25}]} , {_id:0})
+
+db.employees.find( {age : {$gt : 25}} )
+db.employees.find( {age : {$lt : 25}} )
+db.employees.find( {age: {$gt:25, $lte: 50}})
+db.employees.find( {age: {$nin : [45, 35] }})
+db.employees.find( {user_id: "bcd005"} )
+
+db.employees.find( { status : 'A'}).sort({user_id:1})
+db.employees.find( { status : 'A'}).sort({user_id:-1})
+db.employees.find().count()
+
+db.employees.distinct('status')
+
+###  실습
+1. age가 20보다 큰 document의 user_id만 출력
+2. age가 50이고, status가 A인 Document를 출력
+3. age가 60보다 작은 document의 user_id와 age 출력
+
+sol
+db.employees.find( {age : {$gt : 25}}, {user_id:1})
+db.employees.find( {age : {$gt : 25}, status:'A'})
+db.employees.find( {age : {$lt : 60}}, {user_id:1, age:1})
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,138 @@
+ls = [1,2,3,4,5] 
+위의 리스트를 series S로 만드시오.
+S에서 3을 출력하시오.
+S에서 2, 3을 출력하시오.
+S에서 3, 4, 5를 출력하시오
+S에서 3을 10으로 수정하시오
+S에서 3 보다 큰 수를 출력하시오
+S에서  인덱스를 출력하시오.
+S에서 value를 출력하시오.
+
+
+
+
+raw_data= {'first_name':['jason',np.nan, 'tina','jake','amy'],
+          'last_name':['miller', np.nan, 'all','miler','coozer'],
+          'age':[42, np.nan, 36, 24, 73],
+          'sex':['m', np.nan, 'f','m','f'],
+          'pretestscore':[4, np.nan, np.nan, 2, 3],
+          'posttestscore':[25, np.nan, np.nan, 62, 70]}
+
+위의 dict를 dataframe df로 만드시오..
+
+df에서 columns을 추출하시오.
+
+df에서 index를 추출하시오.
+
+df에서 column ‘Sex’를 추출하시오.
+
+df에서 column ‘Sex’와 'posttestscore'를 추출하시오 
+
+df에서 column ‘Sex’와 'pretestscore', 'posttestscore'를 추출하시오 
+
+df에서 index를 ['a','b','c','d','e']로 수정하시오.
+
+df에서 row 'a'를 출력하시오.
+
+df에서 row 'a', ‘b’, ‘c’를 출력하시오.
+
+df에서 첫번째, 두번째 row 를 출력하시오.
+'age'가 40 이상인 사람의 이름을 추출..
+
+'jason'의 prestestscore는 얼마인가?
+
+여성의 평균 나이..
+
+최고령자의 이름...
+
+새로운 값은 [42,25,78,41,23]인 새로운 칼럼 ‘age’ 를 추가하시오.
+
+칼럼 이름을 ['fn','ln','age','sex','prets','postts', 'addr']로 수정하시오.
+
+칼럼 ‘addr’을 삭제하시오.
+
+row ‘b’를 삭제하시오.
+
+(df에서 row의 null갯수를 계산하시오..)
+
+(null값이 포함된 col을 삭제하시오..)
+
+(null값을 0으로 채우시오..)
+
+
+
+
+
+data = {'Team':['Riders','Riders','Devils','Devils','Kings','Giant',\
+               'Kings','Kings','Riders','Royals','Royals','Riders'],\
+       'Rank':[1,2,2,3,3,4,1,1,2,4,1,2],\
+       'Year':[2014,2015,2014,2015,2014,2015,2016,2017,2016,2014,2015,2017],\
+       'Points':[876,789,863,673,741,812,756,788,694,701,804,690]}
+
+data를 dataframe df로 만드시오..
+
+‘Devils’의 points 평균값은?
+
+팀별로 몇 개씩의 데이터가 있는가?
+
+팀별로 가장 놓은 랭킹은 어떻게 되는가?
+
+‘Team’의 이름을 모두 대문자로 수정하시오..
+
+
+
+
+
+
+
+
+
+
+
+raw_data= {'first_name':['jason',np.nan, 'tina','jake','amy'],
+          'last_name':['miller', np.nan, 'all','miler','coozer'],
+          'age':[42, np.nan, 36, 24, 73],
+          'sex':['m', np.nan, 'f','m','f'],
+          'pretestscore':[4, np.nan, np.nan, 2, 3],
+          'posttestscore':[25, np.nan, np.nan, 62, 70]}
+
+
+row별 nan값의 개수를 출력하시오.
+
+column별 nan값의 개수를 출력하시오..
+
+nan값이 포함된 row를 삭제하시오.
+
+데이터가 2개 이하인 row를 삭제하시오 
+
+nan값이 포함된 column을 삭제하시오.
+
+nan값을 ‘0’으로 채우시오.
+
+‘age’를 기준으로 내림차순으로 정렬하시오.
+
+‘sex’ 칼럼에서 남성이면 0, 여성이면 1의 값으로 수정하시오..
+
+
+
+
+
+raw_data = {
+        'subject_id': ['1', '2', '3', '4', '5', '7', '8', '9', '10', '11'],
+        'test_score': [51, 15, 15, 61, 16, 14, 15, 1, 61, 16]}
+df1 = pd.DataFrame(raw_data)
+
+raw_data = {
+        'subject_id': ['4', '5', '6', '7', '8'],
+        'first_name': ['Billy', 'Brian', 'Bran', 'Bryce', 'Betty'], 
+        'last_name': ['Bonder', 'Black', 'Balwner', 'Brice', 'Btisan']}
+df2 = pd.DataFrame(raw_data)
+
+
+dataframe df1과 df2를 칼럼 ‘subject_id’를 기준으로 4가지 방식으로 병합하시오
+
+df1과 df2를 column방향으로 연결하시오..
+
+df1과 df2를 row방향으로 연결하시오..
+
+

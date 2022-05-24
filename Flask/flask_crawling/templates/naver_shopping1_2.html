@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    naver shopping html
+
+    <ul>
+        <h5>전체 카테고리</h5>
+        {% for i in range(1, total_len) %}
+        <li> >>> 상품명 : {{total_list[i]}}</li>
+        <li> >>> 상세설명 : </li>
+        <div>
+        <li>{{total_desc[i]}}</li>
+        </div>
+        <br>
+        {% endfor %}
+
+    </ul>
+    
+    <ul>
+        <h5>백화점 카테고리</h5>
+        {% for i in range(1, department_len) %}
+        <li> >>> 상품명 : {{department_list[i]}}</li>
+        <li> >>> 상세설명 : </li>
+        <div>
+        <li>{{department_desc[i]}}</li>
+        </div>
+        <br>
+        {% endfor %}
+
+    </ul>
+
+    <ul>
+        <h5>해외직구 카테고리</h5>
+        {% for i in range(1, oversea_len) %}
+        <li> >>> 상품명 : {{oversea_list[i]}}</li>
+        <li> >>> 상세설명 : </li>
+        <div>
+        <li>{{oversea_desc[i]}}</li>
+        </div>
+        <br>
+        {% endfor %}
+
+    </ul>
+
+</body>
+</html>

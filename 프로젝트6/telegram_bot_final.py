@@ -7,6 +7,7 @@ from psutil import users
 import seaborn as sns
 import re
 import os
+import time
 
 # 한글 폰트 사용을 위해서 세팅
 from matplotlib import font_manager, rc
@@ -71,30 +72,36 @@ kospi_list = pd.read_csv('./data/recent_kospi_list.csv')
 corp_list = kospi_list['Name']
 df_kospi = pd.read_csv('./data/recent_kospi_list.csv',index_col=0)
 
-now_lst = ['실시간', '현재', '지금']
+now_lst = ['실시간', '현재']
 rct_lst = ['최신뉴스','최근뉴스']
-pos_lst = ['긍정뉴스', '호재', '좋은소식','호재는']
-neg_lst = ['부정뉴스', '악재','악재는?']
+pos_lst = ['긍정뉴스', '호재', '좋은소식','호재는','호재가']
+neg_lst = ['부정뉴스', '악재','악재는?','악재도']
 k_lst = ['키워드','관련있어','관련있어?']
-news_lst_total = ['최신뉴스','최근뉴스','긍정뉴스', '호재', '좋은소식','호재는','부정뉴스', '악재','악재는?','키워드','관련있어','관련있어?']
+news_lst_total = ['최신뉴스','최근뉴스','긍정뉴스', '호재','호재가','좋은소식','호재는',
+'부정뉴스', '악재','악재는?','악재도',
+'키워드','관련있어','관련있어?']
 
-reco_lst1 = ['살만한 주식 뭐 있어?','살만한 종목 뭐 있어?','지금 살만한 종목이야 뭐야?','투자 추천 좀 해줘봐','주식 추천해줘','뭐 살까?','뭐 살까']
-reco_lst2 = ['어떤 업종이 괜찮아?','괜찮은 업종이 어떨꺼 같아?','오르는 업종이 어떤거야?']
+reco_lst1 = ['살만한 주식 뭐 있어?','살만한 종목 뭐 있어?','지금 살만한 종목이 뭐야?','투자 추천 좀 해줘봐','주식 추천해줘','뭐 살까?','뭐 살까',
+'투자 추천 좀 해줘']
+reco_lst2 = ['어떤 업종이 괜찮아?','괜찮은 업종이 어떨꺼 같아?','오르는 업종이 어떤거야?','업종 중에는 어떤 업종이 괜찮아?']
 reco_lst3 = ['코스피가 어떻게 될꺼 같아?','코스피가 어떻게 될 것 같아?','코스피 앞으로 어떻게 될까?','코스피 앞으로 어떻게 될까?','코스피 어떻게 될까?',
 '주식시장 앞으로 어떻게 될것 같아?','주식시장 앞으로 어떻게 될까?','앞으로 주식시장 어떻게 될까?',
-'시장 앞으로 어떻게 될까?', '시장 어떻게 될까?','시장 추세 어떻게 될까?']
+'시장 앞으로 어떻게 될까?', '시장 어떻게 될까?','시장 추세 어떻게 될까?','요즘 시장이 어때?','요즘 시장 어때?','요즘 시장 어때',
+'요즘 장이 어때?','요즘 장이 어떤데?']
 
 reco_lst4 = ['시가','종가','영업이익','PER']
-reco_lst5 = ['어때','어때?','오를까','오를까?','내릴까','내릴까?','어떨꺼','어떨거','어떨','어떄','어떄?']
+reco_lst5 = ['어때','어때?','오를까','오를까?','내릴까','내릴까?','어떨꺼','어떨거','어떨','어떄','어떄?', '살까','살까?','살까말까?','살까말까']
 info_list = ['시가','종가','영업이익','PER']
 
-month_lst = ['1개월','한달','1달','3개월','세달','3달','3','6개월','여섯달','6달','6']
+month_lst = ['1개월','한달','1달','1','3개월','세달','3달','3','6개월','여섯달','6달','6','12개월','12달','12','열둘','열두달']
 month_lst1 = ['1개월','한달','1달','1']
 month_lst3 = ['3개월','세달','3달','3']
 month_lst6 = ['6개월','여섯달','6달','6']
+month_lst12 = ['12개월','12달','12','열둘','열두달']
 
  ######## 함수 ########
-
+ 
+# 실시간 뉴스 크롤링
 def crawl_news(corp,page=1,num=5,bgn_date='2022.03.01',end_date='2022.03.30'):
     
     bgn_date1 = bgn_date
@@ -417,18 +424,400 @@ def DB_info_total(corp,db_type,date,info_list, id = 5322933876):
 
     bot.send_message(chat_id=id, text=val_text) # 답장 보내기
 
+# 텍스트 모델기반 종목 추천 
+def text_invest_result(month,period_rate,date):
+    
+    window_size = month *21
+    df_result = pd.read_csv(f'./data/model_result_test/machine_model3_{window_size}일_{period_rate}.csv',index_col=0)
+    df_result = df_result[(df_result['precision']>0.5) &(df_result['precision'] != 1)]
+    df_result = df_result.sort_values(by='precision',ascending=False)
+    df_result.drop_duplicates(subset='회사이름',inplace=True)
 
-# 투자 기한에 따른 투자종목
-def invest_reco(user_text):
-    if user_text in month_lst1:
-        result = "재무데이터 AI분석결과\n '태경케미컬','흥아해운','에스엘' 종목이 약 15%상승 예정,\n 뉴스키워드 AI분석결과\n ,\n 퀀트 분석결과\n 오를 예정입니다."
-        bot.send_message(chat_id=id, text = result)
-    elif user_text in month_lst3:
-        result = "재무데이터 AI분석결과\n '태경케미컬','흥아해운','에스엘' 종목이 약 15%상승 예정,\n 뉴스키워드 AI분석결과\n ,\n 퀀트 분석결과\n 오를 예정입니다."
-        bot.send_message(chat_id=id, text = result)
-    elif user_text in month_lst6:
-        result = "재무데이터 AI분석결과\n '태경케미컬','흥아해운','에스엘' 종목이 약 15%상승 예정,\n 뉴스키워드 AI분석결과\n ,\n 퀀트 분석결과\n 오를 예정입니다."
-        bot.send_message(chat_id=id, text = result)
+    # 키워드 데이터
+    path = './data/데이터_뉴스키워드빈도/'
+
+    models_path = f'./data/machine_model3_{month}개월_{period_rate}/'
+    saved_model_list = os.listdir(models_path)
+
+    a=''
+    invest_lst = []
+    for corp_name in df_result['회사이름'].tolist():
+
+        code = corp_code(corp_name)
+        df_p = stock_price(code)
+
+        file_path = os.path.join(path,corp_name+'.csv')
+        df_count = pd.read_csv(file_path,index_col=0)
+        df_count.index = pd.DatetimeIndex(df_count.index)
+        df_count = mscaler(df_count)
+        last_col = df_count.columns[-1]
+
+        df_merge = merge(df_count,df_p)
+        # 특정날짜 모델에 넣을 데이터
+        x_invest = np.array(df_merge.loc[date, :last_col]).reshape(1,-1)
+
+        model_path = df_result[df_result['회사이름']==corp_name].iloc[0,-1]
+        #모델 불러오기
+        model = joblib.load(model_path)
+        pred = model.predict(x_invest)[0]
+
+        if pred ==1:
+            a += corp_name + '\n'
+            invest_lst.append(corp_name)
+
+    return a,invest_lst
+
+# 볼린져밴드 방식
+def bb(date):
+    import os
+    import pandas as pd
+    import numpy as np
+    import FinanceDataReader as fdr 
+    df_krx = fdr.StockListing('KOSPI')
+    file_nam = os.listdir('./data/재무+주가_511_last/재무+주가_511_last/')
+#     file_nam[0].split('.')[0]
+    bb_lis = []
+    name_lis = []
+    for i in file_nam:
+        try:
+            df = pd.read_csv('./data/재무+주가_511_last/재무+주가_511_last/'+i,index_col=0)
+            df = df.set_index('date')
+            
+            price_df = df[['수정종가','종목명']] 
+#             bb = bollinger_band(price_df,20,2)
+            bb = price_df.copy()
+            bb['center'] = price_df['수정종가'].rolling(20).mean() #중앙 이동평균선
+            bb['ub'] = bb['center'] + 2 * price_df['수정종가'].rolling(20).std() # 상단 밴드
+            bb['lb'] = bb['center'] - 2 * price_df['수정종가'].rolling(20).std() # 하단 밴드
+
+            book = bb[['수정종가','종목명']].copy()
+            book['trade'] = ''
+
+            for i in book.index:
+                if bb.loc[i, 'lb'] > bb.loc[i, '수정종가']:
+                    book.loc[i, 'trade'] = 'buy'
+            bb_lis.append(book[book['trade'] == 'buy'])
+        except:
+            pass
+    trade_df = pd.concat(bb_lis)
+    trade_df.index = pd.to_datetime(trade_df.index)
+    ticker = trade_df.loc[date,'종목명'].apply(lambda x:str(x).zfill(6)).to_list()
+    for i in ticker:
+        names = df_krx[df_krx['Symbol'] == i]['Name'].to_list()
+        name_lis.append(names)
+    return name_lis
+
+# 마법의 공식
+def magic(date):
+    
+    import FinanceDataReader as fdr 
+    import os 
+    import pandas as pd
+    import numpy as np
+    
+    df_krx = fdr.StockListing('KOSPI')
+    name_lis1=[]
+
+    file_lis = os.listdir('./data/재무+주가_511_last/재무+주가_511_last/')
+    lis = []
+    for i in file_lis:
+        df = pd.read_csv('./data/재무+주가_511_last/재무+주가_511_last/'+i,index_col=0)
+        lis.append(df)
+
+    df = pd.concat(lis)
+    df = df.set_index('date')
+
+    df_2022 = df.loc[date]
+
+    df_2022['ROA'] = pd.to_numeric(df_2022['당기순이익'],errors='coerce') /pd.to_numeric(df_2022['자산총계'],errors='coerce') *100
+
+    per = pd.to_numeric(df_2022['PER'])
+    roa = pd.to_numeric(df_2022['ROA'])
+
+#     per_rank = sort_value(per, asc=True, standard=0 ) # PER 지표값을 기준으로 순위 정렬 및 0 미만 값 제거
+    
+    s_value_mask = per.mask(per < 0, np.nan)
+    s_value_mask_rank = s_value_mask.rank(ascending=True, na_option='bottom')
+    per_rank = s_value_mask_rank
+    
+    s_value_mask1 = roa.mask(roa < 0, np.nan)
+    s_value_mask_rank1 = s_value_mask1.rank(ascending=False, na_option='bottom')
+    roa_rank = s_value_mask_rank1
+    
+#     roa_rank = sort_value(roa, asc=False, standard=0 )# ROA 지표값을 기준으로 순위 정렬 및 0 미만 값 제거
+     
+    result_rank = per_rank + roa_rank   # PER 순위 ROA 순위 합산
+#     result_rank = sort_value(result_rank, asc=True)  # 합산 순위 정렬
+    
+    a = result_rank.mask(result_rank < 0, np.nan)
+    s_value_mask_rank2 = a.rank(ascending=True, na_option='bottom')
+    result_rank = s_value_mask_rank2
+    
+    result_rank = result_rank.where(result_rank <= 10, 0)  # 합산 순위 필터링
+    result_rank = result_rank.mask(result_rank > 0, 1)  # 순위 제거
+
+    mf_df = df_2022.loc[result_rank > 0,['종목명','시가총액']].copy() # 선택된 종목 데이터프레임 복사
+    # mf_stock_list = df_2022.loc[result_rank > 0, '종목명'].values # 선택된 종목명 추출
+    mf_stock_list = df_2022.loc[result_rank > 0, '종목명'].apply(lambda x: str(x).split('.')[0]).apply(lambda x: x.zfill(6)).to_list() # 선택된 종목명 추출
+    # ticker = trade_df.loc[date,'종목명'].apply(lambda x:str(x).zfill(6)).to_list()
+    for i in mf_stock_list:
+        names = df_krx[df_krx['Symbol'] == i]['Name'].to_list()
+        name_lis1.append(names)
+        
+    return name_lis1
+
+# Famma+LSV 
+def famaLSV(date):
+    import pandas as pd
+    import numpy as np
+    import os 
+    import FinanceDataReader as fdr 
+    name_lis3=[]
+    fdr_df = fdr.StockListing('KOSPI')
+    file_lis = os.listdir('./data/재무+주가_511_last/재무+주가_511_last/')
+    lis = []
+    for i in file_lis:
+        df = pd.read_csv('./data/재무+주가_511_last/재무+주가_511_last/'+i,index_col=0)
+        lis.append(df)
+
+    df = pd.concat(lis)
+    df = df.set_index('date')
+
+    df_2016 = df.loc[date]
+    df_2016['PSR'] = df_2016['시가총액'] / df_2016['매출액'] 
+    # df_2016['시총_rank'] = df_2016.loc['2016-01-04':,'시가총액'].rank()
+    # df_2016['pbr_rank'] = df_2016.loc['2016-01-04':,'PBR'].rank()
+    # df_2016['psr_rank'] = df_2016.loc['2016-01-04':,'PSR'].rank()
+    df_2016['시총_rank'] = df_2016['시가총액'].rank()
+    df_2016['pbr_rank'] = df_2016['PBR'].rank()
+    df_2016['psr_rank'] = df_2016['PSR'].rank()
+
+    df_2016['total_rank'] = df_2016['pbr_rank'] + df_2016['psr_rank'] + df_2016['시총_rank']
+    종목명2016 = df_2016.sort_values('total_rank')[:5]['종목명'].apply(lambda x:str(x).split('.')[0]).apply(lambda x:str(x).zfill(6)).to_list()
+#     종목명2016 = df_2016.sort_values('total_rank')[:5]['종목명']
+    for i in 종목명2016:
+        names = fdr_df[fdr_df['Symbol'] == i]['Name'].to_list()
+        name_lis3.append(names)
+    
+    return name_lis3
+
+# 모멘텀
+def momentum(date):
+    import pandas as pd
+    import numpy as np
+    import datetime
+
+    import os
+    lis = []
+    lis2 = []
+    lis3 = []
+    file_nam = os.listdir('./data/재무+주가_511_last/재무+주가_511_last/')
+    for i in file_nam:
+        read_df = pd.read_csv('./data/재무+주가_511_last/재무+주가_511_last/'+i,index_col=0)
+        price_df = read_df.loc[:,['종목명','date','수정종가']].copy()
+        price_df['STD_YM']= price_df['date'].map(lambda x : datetime.datetime.strptime(x, '%Y-%m-%d')\
+                                             .strftime('%Y-%m'))
+        month_list = price_df['STD_YM'].unique()
+        month_last_df = pd.DataFrame()
+        for m in month_list:
+        # 기준년월에 맞는 인덱스의 가장 마지막 날짜 row를 데이터 프레임에 추가한다
+            month_last_df = month_last_df.append(price_df.loc[price_df[price_df['STD_YM'] == m].index[-1]\
+                                                           , : ]
+                                            )
+
+        month_last_df.set_index(['date'],inplace=True)
+        month_last_df['BF_1M_Adj Close'] = month_last_df.shift(1)['수정종가']
+        month_last_df['BF_12M_Adj Close'] = month_last_df.shift(12)['수정종가']
+        month_last_df.fillna(0, inplace=True)
+
+        book = price_df.copy()
+        book.set_index(['date'],inplace=True)
+        book['trade'] = ''
+
+        #trading 부분.
+        ticker = i
+        for x in month_last_df.index:
+            signal = ''
+            # 절대 모멘텀을 계산한다. 
+            momentum_index = month_last_df.loc[x,'BF_1M_Adj Close'] / month_last_df.loc[x,'BF_12M_Adj Close'] -1
+            # 절대 모멘텀 지표 True / False를 판단한다.
+            flag = True if ((momentum_index > 0.0) and (momentum_index != np.inf) and (momentum_index != -np.inf))\
+            else False \
+            and True
+            if flag :
+                signal = 'buy' # 절대 모멘텀 지표가 Positive이면 매수 후 보유.
+#             print('날짜 : ',x,' 모멘텀 인덱스 : ',momentum_index, 'flag : ',flag ,'signal : ',signal)
+            book.loc[x:,'trade'] = signal
+
+        lis2.append(book[book['trade']=='buy'])
+    df = pd.concat(lis2)
+    종목명 = df.loc[date,'종목명'].apply(lambda x:str(x).split('.')[0]).apply(lambda x:x.zfill(6)).to_list()[:5]    
+    import FinanceDataReader as fdr
+    krx_df = fdr.StockListing('KOSPI')
+    for i in 종목명:
+        lis3.append(krx_df[krx_df['Symbol'] == i]['Name'].to_list())
+        
+    return lis3
+
+# 종목 추세         
+def companyy_predict(name, date):
+    
+    end_point = "chatbot-db.c9x08hbiunuu.ap-northeast-2.rds.amazonaws.com"
+    port =3306
+    user_name = 'root'
+    pw ='123123123'
+    
+    conn = pymysql.connect(
+    host = end_point,
+    user = user_name,
+    password = pw,
+#     db = db,
+    charset='utf8'
+    
+    )
+    cursor = conn.cursor()
+    
+    sql = 'use Name_Code_DB;'
+    cursor.execute(sql)
+    
+    sql = 'select * from name_table;'
+
+    name_df = pd.read_sql(sql, conn)
+    
+    for na in range(len(name_df)):
+        if name == name_df.iloc[na,1]:
+            code = name_df.iloc[na,0]
+    
+    autoencoder = load_model(f'c:/Users/bitcamp/Desktop/final_data/autoencoder/Conv_2/auto_conv_{code}.h5')
+
+    company_df = fdr.DataReader(code)
+    stock_close = company_df[['Close']]
+
+    stock_close.columns = ['price']
+    stock_close['pct_change'] = stock_close.price.pct_change()
+    stock_close['log_ret'] = np.log(com_close.price) - np.log(stock_close.price.shift(1))
+    stock_close.dropna(inplace=True)
+
+    x_test = stock_close[stock_close.index == date]
+
+    window_length = 10
+    scaler = MinMaxScaler()
+    x_test_nonscaled = np.array([stock_close['log_ret'].values[i-window_length:i].reshape(-1, 1) for i in tqdm(range(window_length+1,len(stock_close['log_ret'])))])
+    x_test = np.array([scaler.fit_transform(stock_close['log_ret'].values[i-window_length:i].reshape(-1, 1)) for i in tqdm(range(window_length+1,len(stock_close['log_ret'])))])
+
+    y_predict = autoencoder.predict(x_test)
+    labels = [1,0]
+
+    label = labels[y_predict[0].argmax()]
+    confidence = y_predict[0][y_predict[0].argmax()]
+    # print('{} {:.2f}%'.format(label, confidence * 100))
+
+    if label == 1:
+        print(f'{name}는 상승할 예정입니다.')
+    else:
+        print(f'{name}는 하락할 예정입니다.')
+
+# 재무데이터 AI 추천
+def company_recomend(date):
+    end_point = "chatbot-db.c9x08hbiunuu.ap-northeast-2.rds.amazonaws.com"
+    port =3306
+    user_name = 'root'
+    pw ='123123123'
+
+    conn = pymysql.connect(
+        host = end_point,
+        user = user_name,
+        password = pw,
+    #     db = db,
+        charset='utf8'
+
+    )
+    cursor = conn.cursor()
+
+    sql = 'use Chatbot_DB;'
+    cursor.execute(sql)
+
+    sql = 'select * from stock_table;'
+
+    stock_table = pd.read_sql(sql, conn)
+    
+    
+    stock_table['날짜'] = stock_table['날짜'].astype('datetime64')
+    stock_df = stock_table[stock_table['날짜'] == date]
+    stock_df = stock_df.drop(['BPS', 'PER', 'PBR', 'EPS', 'DIV_', 'DPS', 'quarter','날짜','등락률','name'], axis=1)
+    stock_df = stock_df.astype(str).apply(lambda col : col.apply(lambda x: np.nan if x == 'nan' else x))
+    stock_df.dropna(inplace=True)
+
+    hoho = defaultdict(list)
+    plus_df = pd.DataFrame()
+    hoit_df = pd.DataFrame()
+    fail_li = []
+    code_li = []
+    month_li = ['30일','3개월','6개월']
+    per_li = ['5per','10per','15per']
+
+    for code in stock_df['code'][:]:
+        try:
+
+            df = pd.read_csv(f'c:/Users/bitcamp/Desktop/final_data/머신러닝_재무데이터/머신러닝_train_test/{month}/test/{code}.csv', index_col=0)
+            df.drop(['date','등락률','종목명','수익률','quarter','5per','10per','15per'], axis=1, inplace=True)
+            df.rename(columns={'법인세차감전 순이익':'법인세차감전_순이익'}, inplace=True)
+
+            ya_df = pd.concat([stock_df[['code']],stock_df[list(df.columns)]], axis=1)
+            x_test = ya_df[ya_df.code == code].iloc[0,1:]
+
+            for monmon in month_li[:]:
+                for per in per_li[:]:
+
+                        with open(f'c:/Users/bitcamp/Desktop/final_data/머신러닝_모델/{monmon}_{per}/Randomforest/{code}.pkl','rb') as f:
+                                rfc = pickle.load(f)
+
+                        pred = rfc.predict([x_test])
+
+                        col = monmon+'_'+per
+
+                        hoho[col].append(pred[0])
+            code_li.append(code)
+
+        except:
+#             print(code)
+            pass
+
+    plus_df = pd.DataFrame({'code':code_li})
+
+    for col,val in hoho.items():
+        plus_df[col] = val
+    
+#     print(plus_df.head())
+    
+    max_plus_df = plus_df[plus_df['30일_15per']== 1]
+    max_plus_df.reset_index(drop=True, inplace=True)
+
+    pre_df = pd.read_csv('c:/Users/bitcamp/Desktop/final_data/모델정리/종목별_머신러닝/시연용/rfc_30_15.csv', index_col=0)
+    pre_df.code = pre_df.code.apply(lambda x:f'{x:06}')
+
+    company_li = []
+    for pre in range(len(pre_df)):
+        for coco in range(len(max_plus_df)):
+            if max_plus_df.iloc[coco, 0] == pre_df.iloc[pre, 0]:
+                company_li.append(pre_df.iloc[pre,1])
+
+    return company_li[1].strip('[]').strip("''"), company_li[2].strip('[]').strip("''"), company_li[3].strip('[]').strip("''")
+
+# 코스피 업종 추천
+def kospi_kind_recomend():
+    kospi_df = pd.read_csv('c:/Users/bitcamp/Desktop/final_data/업종별/월봉_21_8.csv')
+
+    kospi_corr_df = kospi_df.corr()
+    kospi_corr_df = kospi_corr_df[['코스피_5']]
+
+    kospi_corr_df.reset_index(drop=False, inplace=True)
+    kospi_corr_df.columns = ['업종', 'kospi']
+
+    # kospi_corr_df.sort_values(by=['kospi'], ascending=False)
+    kospi_kind_df = kospi_corr_df.sort_values(by=['kospi'])
+    kind_recomend = kospi_kind_df.iloc[0,0]
+    return kind_recomend.split('_')[0]
 
 ####################################
 

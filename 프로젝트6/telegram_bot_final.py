@@ -49,10 +49,12 @@ from transformers import BertTokenizer, TFBertForSequenceClassification
 # DB
 import pymysql
 import MySQLdb
-
 import warnings
 warnings.filterwarnings('ignore')
 
+import FinanceDataReader as fdr
+import joblib
+from sklearn.preprocessing import MinMaxScaler
 
 Q_TKN = "<usr>"
 A_TKN = "<sys>"
@@ -100,8 +102,41 @@ month_lst6 = ['6개월','여섯달','6달','6']
 month_lst12 = ['12개월','12달','12','열둘','열두달']
 
  ######## 함수 ########
- 
+
 # 실시간 뉴스 크롤링
+
+# 코드 반환
+def corp_code(corp_name):
+    code = df_kospi[df_kospi['Name']==corp_name]['Symbol'].iloc[0]
+    code = str(code).zfill(6)
+    return code
+
+# 주가데이터
+def stock_price(code,bgn_date= '2016-01-01',end_date= '2022-03-31'):
+
+    df_p = fdr.DataReader(code,bgn_date,end_date)
+    df_p = df_p.reset_index()
+    df_p = df_p.rename(columns = {'Date': '날짜'})
+    df_p = df_p.set_index('날짜',drop=True)
+    
+# merge
+def merge(df_count,df_p):
+    df_merge = pd.merge(df_count,df_p['Close'],left_index=True,right_index=True, how='right')
+    return df_merge
+
+
+
+def mscaler(df):
+
+    df.index = pd.DatetimeIndex(df.index)
+    col_list = df.columns
+    scaler = MinMaxScaler()
+    df_scaled = df.copy()
+    df_scaled[col_list] = scaler.fit_transform(df[col_list])
+    
+    return df_scaled
+
+
 def crawl_news(corp,page=1,num=5,bgn_date='2022.03.01',end_date='2022.03.30'):
     
     bgn_date1 = bgn_date
@@ -660,7 +695,7 @@ def momentum(date):
     return lis3
 
 # 종목 추세         
-def companyy_predict(name, date):
+def company_predict(name, date):
     
     end_point = "chatbot-db.c9x08hbiunuu.ap-northeast-2.rds.amazonaws.com"
     port =3306
@@ -819,6 +854,45 @@ def kospi_kind_recomend():
     kind_recomend = kospi_kind_df.iloc[0,0]
     return kind_recomend.split('_')[0]
 
+# 코스피 추세 예측
+def kospi_predict(date):
+    kospi = fdr.DataReader('KS11')
+    kospi_df = kospi[['Close']]
+
+    stock = pd.DataFrame()
+    stock['y'] = kospi_df[['Close']]
+    stock['ds'] = kospi_df.index
+
+    stock.reset_index(drop=True, inplace=True)
+
+    train = stock[stock.ds < '2021-01']
+    test = stock[stock.ds > '2021-01']
+
+    df_prophet = Prophet(changepoint_prior_scale=0.15, daily_seasonality=True)
+    df_prophet.fit(train)
+
+    fcast_time = 100
+    df_forecast = df_prophet.make_future_dataframe(periods=fcast_time, freq='D')
+    # df_forecast.tail(50)
+    df_forecast = df_prophet.predict(df_forecast)
+
+    kospi_updow_df = df_forecast[['ds','yhat','yhat_lower','yhat_upper']]
+#     kospi_updow_df['ds'] = kospi_updow_df['ds'].astype('datetime64')
+
+    kospi_1 = str(kospi_updow_df[kospi_updow_df['ds'] == date]['yhat_upper'].values)
+    kospi_1 = kospi_1.strip('[]')[:4]
+
+    kospi_2 = str(kospi_updow_df[kospi_updow_df['ds'] == date]['yhat_upper'].values)
+    kospi_2 = kospi_2.strip('[]')[:4]
+
+    n = int(kospi_2) - int(kospi_1)
+
+    if n > 0:
+        print('코스피지수가 상승할 예정입니다.')
+    else :
+        print('코스피지수가 하락할 예정입니다.')
+
+
 ####################################
 
  
@@ -865,12 +939,14 @@ def handler(update, context):
 
         # 업종이 어떤거야?
         elif user_text in reco_lst2:
-            bot.send_message(chat_id=id, text='섬유의복 업종 지수상승이 예상됩니다.') # 답장 보내기
-            toggle = 1
+            val_text = kospi_kind_recomend()
+            bot.send_message(chat_id=id, text=val_text)
+            toggle = 1 
 
         # 코스피 지수 or 주식시장
         elif user_text in reco_lst3:
-            bot.send_message(chat_id=id, text='코스피지수가 하락할 예정입니다.') # 답장 보내기
+            val_text = kospi_predict(date)
+            bot.send_message(chat_id=id, text=val_text) # 답장 보내기
             toggle = 1
 
         # gpt일반대화
@@ -910,7 +986,8 @@ def handler(update, context):
 
             # 삼성전자 어떨꺼 같아?
             elif word in reco_lst5:  
-                bot.send_message(chat_id=id, text='삼성전자는 상승할 예정입니다.') 
+                val_text = company_predict(company,date)
+                bot.send_message(chat_id=id, text=val_text)
                 toggle = 1
             
 

@@ -456,8 +456,8 @@ id = 5322933876
  
 bot = telegram.Bot(token)
 bot1 = TelegramBot(token,id)
-# info_message = '''안녕하세요 금융챗봇 고슴도치입니다~'''
-# bot.sendMessage(chat_id=id, text=info_message)
+info_message = '''안녕하세요 금융챗봇 고슴도치입니다~'''
+bot.sendMessage(chat_id=id, text=info_message)
  
 updater = Updater(token=token, use_context=True)
 dispatcher = updater.dispatcher
